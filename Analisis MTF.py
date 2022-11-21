@@ -10,11 +10,7 @@ import numpy as np
 from IPython import get_ipython
 from scipy import ndimage,signal
 from scipy.signal import savgol_filter,argrelextrema
-import statsmodels.api as sm
 from scipy.optimize import curve_fit
-from decimal import Decimal
-from statsmodels.stats.outliers_influence import summary_table
-from statsmodels.sandbox.regression.predstd import wls_prediction_std
 import pandas as pd
 from scipy.fft import fft, fftfreq, irfft
 
@@ -28,20 +24,14 @@ df_sine_list = []
 df_sieme_list = []
 df_list = [df_borde_list, df_sine_list, df_sieme_list]
 
-n = [ "25s_26cms"]
 
 n = [1.4, 2, 2.8, 4, 8]
 
-n = [1.4, 1.4, 2.8, 8, 8]
 
-m = [1.6, 1.6, 1.6, 1.6, 1.6]
-
-#path_sine = r"D:\Imagenes Labo6\22_06_22\11_28_15\f1.6_"+ n[i]+"_sine.csv"
 # append datasets into the list
 for i in range(len(n)):
-    path_borde = r"D:\Imagenes Labo6\variacion diaf\f{}_borde_ldV.csv".format(n[i])
-    #path_borde = r"D:\Imagenes Labo6\22_06_22\11_28_15\f1.6_"+ n[i]+"_edge1.csv"
-    path_sine = r"D:\Imagenes Labo6\variacion diaf\f{}_seno_centro1.csv".format(n[i])
+    path_borde = r"D:\Imagenes Labo6\variacion diaf\f{}_borde.csv".format(n[i])
+    path_sine = r"D:\Imagenes Labo6\variacion diaf\f{}_seno.csv".format(n[i])
     #path_sieme = r"D:\Imagenes Labo6\variacion diaf\f{}_siemens_centro.csv".format(n[i])
     temp_df_1 = pd.read_csv(path_borde)
     df_borde_list.append(temp_df_1)
@@ -54,14 +44,14 @@ for i in range(len(n)):
 
 #%%
 
-def plot_perfil(x, i, title):
+def plot_perfil(x, i, title, lab):
     x_label = x[i].columns[0]
     y_label = x[i].columns[1]
     x_data = np.array((x[i][x_label]))
     temp_ydata = np.array((x[i][y_label]))
     y_data = temp_ydata
     #y_data = (temp_ydata-min(temp_ydata))/(max(temp_ydata)-min(temp_ydata))
-    plt.plot(x_data, y_data, label='apertura f/{}'.format(n[i]))
+    plt.plot(x_data, y_data, label=lab)
     plt.xlabel(x_label)
     plt.ylabel(y_label)
     plt.title(title)
@@ -120,31 +110,19 @@ def derivada_vs_fft(x, y_derivada, i, title):
     plt.show()
 
    
-def plot_mtf(x, i, title):
+def plot_mtf(x, i, title, lab):
     x_label = x[i].columns[0]
     y_label = x[i].columns[1]
     x_data = np.array((x[i][x_label]))
     y_data = np.array((x[i][y_label]))
     y_fft = abs(fft(y_data))
-    #plt.figure(1)
-    #plt.plot(x_freqs,y_fft)
-    #plt.title(title_freq)
-    #ptos = plt.ginput(2)
-    #ptos = np.array(ptos)
-    #plt.figure(1)
-    #plt.plot(x_freqs,y_fft)
-    #plt.scatter(ptos[0][0],ptos[0][1], color = 'r')
-    #plt.scatter(ptos[1][0],ptos[1][1], color = 'r')
-    #plt.title(title_freq)
-    #band = fft(y_fft[(y_fft>ptos[1][0]) & (y_fft< ptos[1][1])])
     py_mtf, px_mtf = fft(y_fft), fftfreq(len(x_data), np.mean(np.diff(x_data)))
-    py_mtf = (py_mtf-min(py_mtf))/(max(py_mtf)-min(py_mtf))
-    x_mtf = px_mtf[(px_mtf>= 0) & (py_mtf <= max(py_mtf))].real
+    py_mtf = (py_mtf-min(py_mtf))/(max(py_mtf)-min(py_mtf)) #normalizo los valores de mtf
+    x_mtf = px_mtf[(px_mtf>= 0) & (py_mtf <= max(py_mtf))].real #tomo la parte real de fft
     y_mtf = py_mtf[(px_mtf>= 0) & (py_mtf <= max(py_mtf))].real
-    plt.plot(x_mtf, y_mtf, label='Apertura f/{}'.format(n[i]))
+    plt.plot(x_mtf, y_mtf, label=lab)
     plt.title(title)
-    #plt.xlim(-5,55)
-    plt.xlabel('Frecuencia [ciclo/mm]')
+    plt.xlabel('Frecuencia [lp/mm]')
     return x_mtf, y_mtf
 
 
@@ -153,15 +131,18 @@ def plot_mtf(x, i, title):
 #Veo los datos originales
 for j in range(len(n)):
     plt.figure()
-    plot_perfil(df_list[0], j, 'Perfil borde - 25mm - variacion {}'.format(n[j]))
+    plot_perfil(df_list[0], j, 'Perfil borde - 25mm - variacion {}'.format(n[j]), 'apertura f/{}'.format(n[j]))
     plt.show()
 
 #%%
 
-#Figura de comparacion de todos los perfiles
+#Figura de comparacion de algunos perfiles
+
+num = [0,2,4]
+
 plt.figure()
-for k in range(len(n)):
-    plot_perfil(df_list[0], k, '')
+for k in num:
+    plot_perfil(df_list[0], k, '', 'apertura f/{}'.format(n[k]))
 plt.legend(loc='upper left')
 plt.xlabel('Posición [mm]')
 plt.ylabel('Intensidad [escala gris]')
@@ -170,63 +151,7 @@ plt.show()
 
 #%%
 
-plt.figure()
-plot_perfil(df_list[1],0,'')
-plot_perfil(df_list[1],2,'')
-plot_perfil(df_list[1],4,'')
-#plot_perfil(df_list[2],4,'')
-plt.legend(loc='upper right')
-plt.xlabel('Posición [mm]')
-plt.ylabel('Intensidad [escala gris]')
-plt.title('Perfil barras - 25mm - 2.36V - G51')
-plt.show()
-
-#%%
-xder = np.array((df_list[0][0].iloc[:,0]))/21
-yder = derivada_discreta(df_list[0],2)
-
-plt.figure()
-plot_perfil(df_list[0],2,'')
-plt.plot(xder, yder,label='LSF ESF')
-plt.legend(loc='upper left')
-plt.xlabel('Posición [mm]')
-plt.ylabel('Intensidad [escala gris]')
-plt.title('Perfil borde - 25mm - f/2.8 - 2.36V - G51')
-plt.show()
-
-#%%
-
-plt.figure()
-fourier_transf(df_list[0], 1,'g')
-fourier_transf(df_list[1], 0,'r')
-plt.legend(loc='upper left')
-plt.xlabel('Posición [mm]')
-plt.ylabel('Gray scale')
-plt.title('Perfil linespread - 25mm vs 35mm - 2.36V - G51')
-plt.show()
-
-#%%
-
-#COmparacion tiempo de exposicion vs intensidad del perfil de borde
-ymean_bright = []
-for i in range(len(n)):
-    xdata = np.array((df_list[0][i]['Distance_(mm)']))
-    ydata = np.array((df_list[0][i]['Gray_Value']))
-    y_bright = ydata[xdata > 1.6]
-    ymean_bright.append(np.mean(y_bright))
-
-times = np.array((13,25,19,48,100))
-plt.figure()
-plt.scatter(times, ymean_bright)
-plt.xlabel('Tiempo de exposicion [s]')
-plt.ylabel('Promedio de la intensidad - lado blanco')
-plt.show()
-
-z = np.polyfit(times, ymean_bright, 3)
-
-
-#%%
-
+#ANALISIS DE BORDE
 #Figura de todos los mtf
 xdata_mtf = []
 ydata_mtf = []
@@ -235,7 +160,7 @@ xc = []
 
 plt.figure()
 for k in range(len(n)):
-    temp_x_mtf, temp_y_mtf = plot_mtf(df_list[0], k, '')
+    temp_x_mtf, temp_y_mtf = plot_mtf(df_list[0], k, '', 'apertura f/{}'.format(n[k]))
     temp_xc= min(temp_x_mtf.real[temp_y_mtf.real < (max(temp_y_mtf.real)*0.1)])
     xc.append(temp_xc)
 plt.legend(loc='upper right')
@@ -251,16 +176,6 @@ print('Las resoluciones son ', Res, 'micrometro')
 
 #%%
 
-plt.figure()
-plt.scatter(n,Res)
-plt.xlabel('# Apertura Diafragma')
-plt.ylabel('Resolución (μm)')
-plt.title('Resolución espacial - 25mm - variación diafragma - 2.36V - G51')
-plt.show()
-
-
-#%%
-
 #Derivada vs fft para linespread
 der_dis = []
 for j in range(len(n)):
@@ -272,28 +187,11 @@ for k in range(len(n)):
     
 puntos = plt.ginput(2)
 puntos = np.array((puntos))
-print('el ancho de banda es aprox', 100, 'micrometro')
-
-
-#%%
-#Lo que entendi yo es que hay que ver donde llega el limite inferior de mtf
-#En este caso es de una frecuencia espacial de aprox 45, o sea 45/mm
-#Por lo que la resolucion debe ser el orden de 1/frecuencia espacial que es aprox 20 micrones
-
-x_mtf, y_mtf = plot_mtf(df_list[0], 2, 'MTF borde - 25mm {}'.format(n[1]))
-x_mtf1, y_mtf1 = plot_mtf(df_list[1], 0, 'MTF borde - 25mm {}'.format(m[0]))
-
-plt.figure()
-plt.plot( x_mtf, y_mtf , label='señal original f/2.8')
-plt.plot( x_mtf1, y_mtf1 , color='orange',label='señal filtrada f/2.8')
-plt.scatter(x_mtf,y_mtf, color='r', label='mínimos')
-plt.legend(loc='upper right')
-plt.ylabel('Intensidad [escala gris]')
-plt.xlabel('Frecuencia [lp/mm]')
-plt.title('Perfil borde - MFT - 25mm vs 35mm')
-plt.show()
+print('el ancho de banda es aprox', np.diff(puntos[:,0]), 'micrometro')
 
 #%%
+
+#Funciones para ajustar mtf, no sirve mucho porque son para sistemas de lentes muy ideales, y aca tenemos muchas imperfecciones
 
 def mtf(x, xi_c, a):
     f = 25
@@ -312,33 +210,13 @@ px = np.linspace(min(x_mtf), max(x_mtf),500)
 plt.figure()
 plt.plot( x_mtf, y_mtf , label='Datos')
 plt.plot(px, mtf_eff(px,*popt),label='Modelo MTF')
-plt.xlabel('Frecuencia [1/mm]')
+plt.xlabel('Frecuencia [lp/mm]')
 plt.title('Perfil MFT - Lfocal 2')
 plt.legend(loc='upper right')
 plt.show()
 
 
 #%%
-
-der_dis = []
-for j in range(len(n)):
-    fourier_transf(df_list[1], j, 'b')
-    
-#%%
-
-#NO LO TERMINE USANDO MUCHO ESTE
-#Todos los perfiles y todos los mft por separado
-for j in range(len(n)):
-    #Veo la funcion linespread, que es la derivada de los bordes (o lo equivalente en este caso: fft)
-    fourier_transf(df_list[0], j, 'Perfil borde - 25mm - diafragma {}'.format(n[j]), 'FFT borde - 25mm - Lfocal {}'.format(n[j]))
-    #Veo la fft de linespread, que deberia devolver mft
-    plt.figure()
-    plot_mtf(df_list[0], j,'Perfil MFT - diafragma {}'.format(n[j]))
-    plt.show()
-
-    
-#%%
-
 #ANALISIS DEL SENO
 
 from statsmodels.nonparametric.smoothers_lowess import lowess
