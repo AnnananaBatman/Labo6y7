@@ -44,6 +44,7 @@ for i in range(len(n)):
 
 #%%
 
+#funciones
 def plot_perfil(x, i, title, lab):
     x_label = x[i].columns[0]
     y_label = x[i].columns[1]
@@ -259,7 +260,7 @@ for k in range(len(n)):
     #perr0 = np.diag(pcov0)
     #px0 = np.linspace(min(temp_x_max), 15,500)
     #py0 = mtf_eff(px0,*popt0)
-    #temp_xc_sine= max(temp_x_max[temp_y_max_norm <= (max(temp_y_max_norm)*0.6)])
+    #temp_xc_sine= max(temp_x_max[temp_y_max <= (max(temp_y_max)*0.6)])
     #xc_sine.append(temp_xc_sine)
     #popt_sine.append(popt0)
     #perr_sine.append(perr0)
@@ -278,19 +279,6 @@ print('Las configuraciones son ', n)
 print('La resolucion del patron sinusoidal es de ', Res_sine, 'micrometro')
 
 #%%
-
-#puntos = plt.ginput(2)
-#puntos = np.array((puntos))
-
-temp_x_max, temp_y_max, temp_y_max_norm = plot_max(df_list[1], 4, 0.03, '','#{}'.format(n[4]))
-#%%
-
-ydata_max_norm[0] = np.delete(ydata_max_norm[0], 3)
-xdata_max[0] = np.delete(xdata_max[0], 3)
-ydata_max_norm[4] = np.concatenate([ydata_max_norm[4], np.array((0.18776, 0.19056))])
-xdata_max[4] = np.concatenate([xdata_max[4], np.array((10.5254, 10.72))])
-
-xc_sine_mtf = []
 
 def mtf_eff(f,f0):
     return 1/(1+abs(f/f0)**2)
@@ -327,21 +315,6 @@ plt.xlabel('[1/mm]')
 plt.ylabel('MTF')
 plt.title('Ajuste MTF sine - 25mm - variación diafragma')
 plt.show()
-#%%
-
-#Si hay que introducir los max manualmente
-
-'''
-puntos = plt.ginput(6)
-puntos = np.array((puntos))
-max_loc_y, max_loc_x = np.concatenate((y_max, puntos[:,1])), np.concatenate((x_max, puntos[:,0]))
-max_loc_y, max_loc_x = np.array((sorted(list(max_loc_y)))), np.array((sorted(list(max_loc_x))))
-
-plt.figure()
-plt.plot(x_temp, y_temp)
-plt.plot(df_list[1][0]['Distance_(mm)'],filtered_y)
-plt.scatter(max_loc_x, max_loc_y)
-'''
 
 #%%
 
@@ -350,54 +323,23 @@ folderpath_sine = r'C:\Users\luo\OneDrive\文档\Labo 6y7\15_06_22\10_47_48\diaf
 
 #guardo los datos en un archivo txt
 file=open(folderpath + 'Analisis_res.txt','a')
-file.write('%10.6f' % (Res[0])+',')
-file.write('%10.6f' % (Res[1])+',')
-file.write('%10.6f' % (Res[2])+',')
-file.write('%10.6f' % (Res[3])+',')
-file.write('%10.6f' % (Res[4])+'\n')
+for i in range(len(Res)-1):
+    file.write('%10.6f' % (Res[i])+',')
+file.write('%10.6f' % (Res[len(Res)-1])+'\n')
 file.close()
 
 #%%
 file_sine=open(folderpath_sine + 'Analisis_res_sine.txt','a')
-file_sine.write('%10.6f' % (Res_sine[0])+',')
-file_sine.write('%10.6f' % (Res_sine[1])+',')
-file_sine.write('%10.6f' % (Res_sine[2])+',')
-file_sine.write('%10.6f' % (Res_sine[3])+',')
-file_sine.write('%10.6f' % (Res_sine[4])+'\n')
+for i in range(len(Res_sine)-1):
+    file.write('%10.6f' % (Res_sine[i])+',')
+file.write('%10.6f' % (Res_sine[len(Res_sine)-1])+'\n')
 file_sine.close()
 
 file_sine0=open(folderpath_sine + 'Analisis_xic_sine.txt','a')
-file_sine0.write('%10.6f' % (popt_sine[0])+',')
-file_sine0.write('%10.6f' % (popt_sine[1])+',')
-file_sine0.write('%10.6f' % (popt_sine[2])+',')
-file_sine0.write('%10.6f' % (popt_sine[3])+',')
-file_sine0.write('%10.6f' % (popt_sine[4])+'\n')
+for i in range(len(popt_sine)-1):
+    file.write('%10.6f' % (popt_sine[i])+',')
+file.write('%10.6f' % (popt_sine[len(popt_sine)-1])+'\n')
 file_sine0.close()
-
-#%%
-
-data_sine = np.loadtxt(folderpath_sine + 'Analisis_res_sine.txt',dtype=float,delimiter = ',',skiprows= 0)
-data_borde = np.loadtxt(folderpath + 'Analisis_res.txt',dtype=float,delimiter = ',',skiprows= 0)
-
-plt.figure()
-plt.scatter(times, data_borde[0], label='Centro',color='g')
-plt.scatter(times, data_borde[1], label='LU',color='cornflowerblue')
-plt.scatter(times, data_borde[2], label='RD',color='orange')
-plt.legend(loc='upper right')
-plt.xlabel('Tiempo de exposicion [s]')
-plt.ylabel('Resolucion [μs]')
-plt.title('Comparacion de resoluciones en diferentes areas')
-plt.show()
-
-plt.figure()
-plt.scatter(times, data_sine[0], label='Centro',color='g')
-plt.scatter(times, data_sine[1], label='LD',color='cornflowerblue')
-plt.scatter(times, data_sine[2], label='RU',color='orange')
-plt.legend(loc='upper right')
-plt.xlabel('Tiempo de exposicion [s]')
-plt.ylabel('Resolucion [μs]')
-plt.title('Comparacion de resoluciones en diferentes areas')
-plt.show()
 
 
 
